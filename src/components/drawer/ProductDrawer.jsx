@@ -327,6 +327,7 @@ const ProductDrawer = ({ id }) => {
                     currency={currency}
                   />
                   <Error errorName={errors.profit} />
+                  <p className="text-xs text-gray-500 mt-1">Enter the profit amount per unit sold</p>
                 </div>
               </div>
 
