@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@windmill/react-ui";
 import { ImFacebook, ImGoogle } from "react-icons/im";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 
 //internal import
@@ -17,6 +18,7 @@ const Login = () => {
   const { t } = useTranslation();
   const { onSubmit, register, handleSubmit, errors, loading } =
     useLoginSubmit();
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <>
@@ -42,31 +44,40 @@ const Login = () => {
                 <h1 className="mb-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
                   Login
                 </h1>
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+                  <input type="text" style={{display: "none"}} />
+                  <input type="password" style={{display: "none"}} />
                   <LabelArea label="Email" />
                   <InputArea
                     required={true}
                     register={register}
-                    defaultValue="admin@gmail.com"
                     label="Email"
                     name="email"
                     type="email"
-                    autoComplete="username"
+                    autoComplete="off"
                     placeholder="john@doe.com"
                   />
                   <Error errorName={errors.email} />
                   <div className="mt-6"></div>
                   <LabelArea label="Password" />
-                  <InputArea
-                    required={true}
-                    register={register}
-                    defaultValue="12345678"
-                    label="Password"
-                    name="password"
-                    type="password"
-                    autocomplete="current-password"
-                    placeholder="***************"
-                  />
+                  <div className="relative">
+                    <InputArea
+                      required={true}
+                      register={register}
+                      label="Password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="off"
+                      placeholder="***************"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none"
+                    >
+                      {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    </button>
+                  </div>
                   <Error errorName={errors.password} />
 
                   {loading ? (

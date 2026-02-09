@@ -52,7 +52,7 @@ const Header = () => {
   const handleLogOut = () => {
     dispatch({ type: "USER_LOGOUT" });
     Cookies.remove("adminInfo");
-    window.location.replace(`${import.meta.env.VITE_APP_ADMIN_DOMAIN}/login`);
+    window.location.replace("/login");
   };
 
   const handleNotificationOpen = async () => {
