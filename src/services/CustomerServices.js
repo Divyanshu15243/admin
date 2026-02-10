@@ -28,6 +28,10 @@ const CustomerServices = {
   deleteCustomer: async (id) => {
     return requests.delete(`/customer/${id}`);
   },
+
+  sendPaymentNotification: async (id, amount) => {
+    return requests.post(`/customer/payment-notification/${id}`, { amount });
+  },
 };
 
 export default CustomerServices;

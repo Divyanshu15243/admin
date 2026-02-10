@@ -47,9 +47,18 @@ const sidebar = [
   },
 
   {
-    path: "/customers",
     icon: FiUsers,
     name: "Customers",
+    routes: [
+      {
+        path: "/customers",
+        name: "Customers",
+      },
+      {
+        path: "/customer-profit",
+        name: "CustomerProfit",
+      },
+    ],
   },
   {
     path: "/orders",

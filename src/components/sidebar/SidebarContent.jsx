@@ -27,11 +27,14 @@ const SidebarContent = () => {
 
   const updatedSidebar = sidebar
     .map((route) => {
+      // Super Admin has access to everything
+      const isSuperAdmin = accessList.includes("dashboard") && accessList.length > 10;
+      
       // Filter sub-routes if they exist
       if (route.routes) {
         const validSubRoutes = route.routes.filter((subRoute) => {
+          if (isSuperAdmin) return true;
           const routeKey = subRoute.path.split("?")[0].split("/")[1];
-          // console.log("subRoute", routeKey);
           return accessList.includes(routeKey);
         });
 
@@ -39,9 +42,10 @@ const SidebarContent = () => {
         if (validSubRoutes.length > 0) {
           return { ...route, routes: validSubRoutes };
         }
-        return null; // Exclude the main route if no sub-routes are valid
+        return null;
       }
-      // Handle top-level route: check root path part
+      // Handle top-level route
+      if (isSuperAdmin) return route;
       const routeKey = route.path?.split("?")[0].split("/")[1];
       return routeKey && accessList.includes(routeKey) ? route : null;
     })

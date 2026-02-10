@@ -344,6 +344,62 @@ const Dashboard = () => {
             <PieChart data={bestSellerProductChart} />
           </ChartCard>
         </div>
+
+        <div className="grid gap-4 md:grid-cols-2 my-8">
+          <ChartCard
+            mode={mode}
+            loading={loadingOrderAmount}
+            title="Monthly Profit Distribution (60/40)"
+          >
+            <PieChart
+              data={{
+                bestSellingProduct: [
+                  {
+                    _id: "Owner Profit (60%)",
+                    count: dashboardOrderAmount?.thisMonthOwnerProfit || 0,
+                  },
+                  {
+                    _id: "Referral Commission (40%)",
+                    count: dashboardOrderAmount?.thisMonthReferralCommission || 0,
+                  },
+                ],
+              }}
+            />
+          </ChartCard>
+
+          <ChartCard
+            mode={mode}
+            loading={loadingOrderAmount}
+            title="Profit Breakdown"
+          >
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-600">Owner Profit (60%)</p>
+                  <p className="text-2xl font-bold text-emerald-600">
+                    ₹{dashboardOrderAmount?.thisMonthOwnerProfit?.toFixed(2) || "0.00"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-600">Referral Commission (40%)</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    ₹{dashboardOrderAmount?.thisMonthReferralCommission?.toFixed(2) || "0.00"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg border-t-2 border-gray-300">
+                <div>
+                  <p className="text-sm text-gray-600 font-semibold">Total Monthly Profit</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    ₹{((dashboardOrderAmount?.thisMonthOwnerProfit || 0) + (dashboardOrderAmount?.thisMonthReferralCommission || 0)).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </ChartCard>
+        </div>
       </AnimatedContent>
 
       <PageTitle>{t("RecentOrder")}</PageTitle>
