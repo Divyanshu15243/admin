@@ -41,7 +41,8 @@ const CustomerProfit = () => {
     const exportData = customersWithProfit.map((customer) => ({
       "Customer ID": customer._id,
       "Customer Name": customer.name,
-      "Profit (₹)": customer.walletBalance?.toFixed(2) || "0.00",
+      "Referral Profit (₹)": customer.walletBalance?.toFixed(2) || "0.00",
+      "Owner Profit (₹)": customer.ownerProfit?.toFixed(2) || "0.00",
       "Account Holder Name": customer.bankDetails?.accountHolderName || "N/A",
       "Account Number": customer.bankDetails?.accountNumber || "N/A",
       "IFSC Code": customer.bankDetails?.ifscCode || "N/A",
@@ -98,7 +99,8 @@ const CustomerProfit = () => {
                     <tr>
                       <TableCell>Customer ID</TableCell>
                       <TableCell>Customer Name</TableCell>
-                      <TableCell>Total Profit</TableCell>
+                      <TableCell>Referral Profit</TableCell>
+                      <TableCell>Owner Profit</TableCell>
                       <TableCell>Bank Details</TableCell>
                       <TableCell>Action</TableCell>
                     </tr>
@@ -115,6 +117,11 @@ const CustomerProfit = () => {
                         <TableCell>
                           <span className="text-sm font-bold text-green-600">
                             ₹{customer.walletBalance?.toFixed(2) || "0.00"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-bold text-blue-600">
+                            ₹{customer.ownerProfit?.toFixed(2) || "0.00"}
                           </span>
                         </TableCell>
                         <TableCell>
