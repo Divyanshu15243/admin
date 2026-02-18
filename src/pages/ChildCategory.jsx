@@ -73,17 +73,41 @@ const ChildCategory = () => {
           );
     };
 
-    if (!loading) {
-      const result = findChildArray(data[0], id);
-      const res = getAncestors(id, data[0]?.children);
+    if (!loading && data?.length > 0) {
+      const findInData = (items, target) => {
+        for (let item of items) {
+          if (item._id === target) return item;
+          if (item.children) {
+            const found = findInData(item.children, target);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const getAncestorsFromData = (items, target, ancestors = []) => {
+        for (let item of items) {
+          if (item._id === target) return ancestors.concat(item);
+          if (item.children) {
+            const found = getAncestorsFromData(item.children, target, ancestors.concat(item));
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const result = findInData(data, id);
+      const res = getAncestorsFromData(data, id);
 
       if (result?.children?.length > 0) {
-        setChildCategory(result?.children);
+        setChildCategory(result.children);
         setSelectObj(res);
+      } else {
+        setChildCategory([]);
+        setSelectObj(res || []);
       }
-      // console.log("result", result, "res", res);
     }
-  }, [id, loading, data, childCategory]);
+  }, [id, loading, data]);
 
   const {
     totalResults,
@@ -224,7 +248,7 @@ const ChildCategory = () => {
           </TableFooter>
         </TableContainer>
       ) : (
-        <NotFound title="Sorry, There are no categories right now." />
+        <NotFound title="This category has no subcategories." />
       )}
     </>
   );

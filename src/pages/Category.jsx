@@ -61,7 +61,7 @@ const Category = () => {
     handleSelectFile,
     handleUploadMultiple,
     handleRemoveSelectFile,
-  } = useFilter(data[0]?.children ? data[0]?.children : data);
+  } = useFilter(data);
 
   // react hooks
   const [isCheckAll, setIsCheckAll] = useState(false);
