@@ -127,6 +127,7 @@ const DeleteModal = ({ id, ids, setIsCheck, category, title, useParamId }) => {
         const res = await CustomerServices.deleteCustomer(id);
         setIsUpdate(true);
         notifySuccess(res.message);
+        if (setIsCheck) setIsCheck([]);
         setServiceId();
         closeModal();
         setIsSubmitting(false);
@@ -233,7 +234,7 @@ const DeleteModal = ({ id, ids, setIsCheck, category, title, useParamId }) => {
     } catch (err) {
       notifyError(err ? err?.response?.data?.message : err?.message);
       setServiceId();
-      setIsCheck([]);
+      if (setIsCheck) setIsCheck([]);
       closeModal();
       setIsSubmitting(false);
     }
