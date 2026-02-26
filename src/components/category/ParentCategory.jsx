@@ -67,8 +67,12 @@ const ParentCategory = ({
   };
 
   const handleSelect = (key) => {
-    const obj = data[0];
-    const result = findObject(obj, key);
+    // Search through all categories, not just data[0]
+    let result = undefined;
+    for (let category of data) {
+      result = findObject(category, key);
+      if (result !== undefined) break;
+    }
 
     if (result !== undefined) {
       const getCategory = selectedCategory.filter(
