@@ -1,7 +1,6 @@
 import {
   Document,
   Font,
-  Image,
   // Image,
   Page,
   StyleSheet,
@@ -9,7 +8,7 @@ import {
   View,
 } from "@react-pdf/renderer";
 import { useTranslation } from "react-i18next";
-import logoDark from "@/assets/img/logo/logo-color.png";
+
 
 Font.register({
   family: "Open Sans",
@@ -341,18 +340,13 @@ const InvoiceForDownload = ({
                   marginLeft: 80,
                   marginTop: 35,
                   textAlign: "right",
+                  fontSize: 14,
+                  fontFamily: "Open Sans",
+                  fontWeight: "bold",
                 }}
               >
-                <Image
-                  src={logoDark}
-                  alt="kachabazar"
-                  style={{
-                    width: 90,
-                    alignItems: "right",
-                    textAlign: "right",
-                    float: "right",
-                  }}
-                />
+                <Text style={{ color: "#10b981" }}>N23 </Text>
+                <Text style={{ color: "#374151" }}>Gujarati Basket</Text>
               </Text>
               <Text
                 style={{

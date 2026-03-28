@@ -18,7 +18,7 @@ const SidebarContent = () => {
   const { t } = useTranslation();
   const { mode } = useContext(WindmillContext);
   const { dispatch } = useContext(AdminContext);
-  const { accessList } = useGetCData();
+  const { accessList, role } = useGetCData();
 
   const handleLogOut = () => {
     dispatch({ type: "USER_LOGOUT" });
@@ -28,7 +28,7 @@ const SidebarContent = () => {
   const updatedSidebar = sidebar
     .map((route) => {
       // Super Admin has access to everything
-      const isSuperAdmin = accessList.includes("dashboard") && accessList.length > 10;
+      const isSuperAdmin = role === "Super Admin" || accessList.length > 10;
       
       // Filter sub-routes if they exist
       if (route.routes) {

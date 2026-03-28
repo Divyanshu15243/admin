@@ -1,5 +1,6 @@
 {
   "DashboardOverview": "Dashboard Overview",
+  "POS": "Point of Sale",
   "TodayOrder": "Today Orders",
   "YesterdayOrder": "Yesterday Orders",
   "ThisMonth": "This Month",
@@ -10,7 +11,7 @@
   "OrderDelivered": "Orders Delivered",
   "POSOrders": "POS Orders",
   "OnlineOrders": "Online Orders",
-  "WeeklySales": "Weekly Sales",
+  "WeeklySales": "Monthly Sales",
   "BestSellingProducts": "Best Selling Products",
   "Cash": "Cash",
   "Card": "Card",

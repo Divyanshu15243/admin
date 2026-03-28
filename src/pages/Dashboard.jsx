@@ -13,7 +13,7 @@ import isToday from "dayjs/plugin/isToday";
 import isYesterday from "dayjs/plugin/isYesterday";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FiCheck, FiRefreshCw, FiShoppingCart, FiTruck } from "react-icons/fi";
+import { FiCheck, FiRefreshCw, FiShoppingCart, FiTruck, FiUsers } from "react-icons/fi";
 import { ImCreditCard, ImStack } from "react-icons/im";
 
 //internal import
@@ -30,6 +30,7 @@ import NotFound from "@/components/table/NotFound";
 import PageTitle from "@/components/Typography/PageTitle";
 import { SidebarContext } from "@/context/SidebarContext";
 import OrderServices from "@/services/OrderServices";
+import CustomerServices from "@/services/CustomerServices";
 import AnimatedContent from "@/components/common/AnimatedContent";
 
 const Dashboard = () => {
@@ -67,6 +68,10 @@ const Dashboard = () => {
     OrderServices.getDashboardCount
   );
 
+  const { data: customersData, loading: loadingCustomers } = useAsync(() =>
+    CustomerServices.getAllCustomers({ searchText: "" })
+  );
+
   const { data: dashboardOrderAmount, loading: loadingOrderAmount } = useAsync(
     OrderServices.getDashboardAmount
   );
@@ -99,7 +104,7 @@ const Dashboard = () => {
     const salesOrderChartData = dashboardOrderAmount?.ordersData?.filter(
       (order) =>
         dayjs(order.updatedAt).isBetween(
-          new Date().setDate(new Date().getDate() - 7),
+          new Date().setDate(new Date().getDate() - 30),
           new Date()
         )
     );
@@ -302,6 +307,13 @@ const Dashboard = () => {
             loading={loadingOrderCount}
             quantity={dashboardOrderCount?.totalOrder || 0}
             className="text-orange-600 dark:text-orange-100 bg-orange-100 dark:bg-orange-500"
+          />
+          <CardItem
+            title="Total Customers"
+            Icon={FiUsers}
+            loading={loadingCustomers}
+            quantity={customersData?.length || 0}
+            className="text-purple-600 dark:text-purple-100 bg-purple-100 dark:bg-purple-500"
           />
           <CardItem
             title={t("OrderPending")}
