@@ -30,7 +30,7 @@ const LineChart = ({ salesReport }) => {
     data: {
       labels: updatedSalesReport
         ?.sort((a, b) => new Date(a.date) - new Date(b.date))
-        ?.map((or) => or.date),
+        ?.map((or) => new Date(or.date).getDate()),
       datasets: [
         activeButton.title === "Sales"
           ? {

@@ -15,7 +15,10 @@ const SaleChart = ({ salesReport }) => {
 
   const barOptions = {
     data: {
-      labels: salesReport?.map((or) => or.date),
+      labels: salesReport?.map((or) => {
+        const d = new Date(or.date);
+        return isNaN(d) ? or.date : d.getDate();
+      }),
       datasets: [
         activeButton.title === "Sales"
           ? {

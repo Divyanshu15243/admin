@@ -8,6 +8,7 @@ import {
   FiGlobe,
   FiTarget,
   FiShoppingBag,
+  FiArchive,
 } from "react-icons/fi";
 
 /**
@@ -70,6 +71,11 @@ const sidebar = [
     path: "/pos",
     icon: FiShoppingBag,
     name: "POS",
+  },
+  {
+    path: "/stock-management",
+    icon: FiArchive,
+    name: "Stock",
   },
 
   {

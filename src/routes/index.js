@@ -26,6 +26,7 @@ const StoreHome = lazy(() => import("@/pages/StoreHome"));
 const StoreSetting = lazy(() => import("@/pages/StoreSetting"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const POS = lazy(() => import("@/pages/POS"));
+const StockManagement = lazy(() => import("@/pages/StockManagement"));
 /*
 //  * ⚠ These are internal routes!
 //  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -132,6 +133,10 @@ const routes = [
     path: "/pos",
     component: POS,
   },
+  {
+    path: "/stock-management",
+    component: StockManagement,
+  },
 ];
 
 const routeAccessList = [
@@ -164,6 +169,7 @@ const routeAccessList = [
   { label: "Notification", value: "notifications" },
   { label: "Coming Soon", value: "coming-soon" },
   { label: "POS", value: "pos" },
+  { label: "StockManagement", value: "stock-management" },
 ];
 
 export { routeAccessList, routes };

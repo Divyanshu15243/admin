@@ -1,5 +1,5 @@
 import { useContext, useState, useRef } from "react";
-import { FiSearch, FiTrash2, FiPrinter, FiPlus, FiMinus, FiEye } from "react-icons/fi";
+import { FiSearch, FiTrash2, FiPrinter, FiPlus, FiMinus, FiEye, FiUser, FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { WindmillContext } from "@windmill/react-ui";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +10,8 @@ import PageTitle from "@/components/Typography/PageTitle";
 import Loading from "@/components/preloader/Loading";
 import ProductServices from "@/services/ProductServices";
 import OrderServices from "@/services/OrderServices";
+import CustomerServices from "@/services/CustomerServices";
+import AttributeServices from "@/services/AttributeServices";
 import useUtilsFunction from "@/hooks/useUtilsFunction";
 import { notifyError, notifySuccess } from "@/utils/toast";
 import { AdminContext } from "@/context/AdminContext";
@@ -29,6 +31,54 @@ const POS = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
   const [posPage, setPosPage] = useState(1);
+
+  // customer states
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+
+  // variant modal states
+  const [variantModal, setVariantModal] = useState(null); // product with variants
+  const [selectedVariant, setSelectedVariant] = useState({});
+
+  const { data: customersData } = useQuery({
+    queryKey: ["pos-customers", customerSearch],
+    queryFn: () => CustomerServices.getAllCustomers({ searchText: customerSearch }),
+    enabled: customerSearch.length > 0,
+  });
+
+  const customers = Array.isArray(customersData) ? customersData : customersData?.customers || [];
+
+  // fetch all attributes to map IDs to names
+  const { data: attributesData } = useQuery({
+    queryKey: ["all-attributes"],
+    queryFn: () => AttributeServices.getShowingAttributes({}),
+  });
+
+  // build a flat map: { attributeId: { name, children: { childId: childName } } }
+  const attrMap = {};
+  if (attributesData) {
+    attributesData.forEach((attr) => {
+      attrMap[attr._id] = {
+        name: showingTranslateValue(attr.name),
+        children: {},
+      };
+      attr.values?.forEach((child) => {
+        attrMap[attr._id].children[child._id] = showingTranslateValue(child.name);
+      });
+    });
+  }
+
+  // given a variant object, return readable label like "150g / Red"
+  const getVariantLabel = (variant) => {
+    const parts = [];
+    Object.keys(variant).forEach((key) => {
+      if (['_id','price','originalPrice','quantity','discount','productId','barcode','sku','image'].includes(key)) return;
+      const attrName = attrMap[key]?.children[variant[key]] || variant[key];
+      if (attrName) parts.push(attrName);
+    });
+    return parts.join(' / ') || 'Default';
+  };
 
   const { data: posOrdersData, isLoading: posOrdersLoading, refetch: refetchPosOrders } = useQuery({
     queryKey: ["pos-orders", posPage],
@@ -54,28 +104,54 @@ const POS = () => {
 
   const products = data?.products || [];
 
-  // cart operations
+  // add to cart - check for variants first
   const addToCart = (product) => {
-    const price = product.prices?.price || 0;
-    const existing = cart.find((i) => i._id === product._id);
-    if (existing) {
-      setCart(
-        cart.map((i) =>
-          i._id === product._id ? { ...i, quantity: i.quantity + 1 } : i
-        )
-      );
-    } else {
-      setCart([...cart, { ...product, quantity: 1, price }]);
+    const hasVariants = product.variants && product.variants.length > 0;
+    if (hasVariants) {
+      setSelectedVariant({});
+      setVariantModal(product);
+      return;
     }
+    addProductToCart(product, null);
   };
 
-  const updateQty = (id, qty) => {
-    if (qty < 1) return removeFromCart(id);
-    setCart(cart.map((i) => (i._id === id ? { ...i, quantity: qty } : i)));
+  const addProductToCart = (product, variant) => {
+    const price = variant ? (variant.price || product.prices?.price || 0) : product.prices?.price || 0;
+    const cartId = variant ? `${product._id}-${variant.productId || JSON.stringify(variant)}` : product._id;
+    const variantLabel = variant ? getVariantLabel(variant) : null;
+    const existing = cart.find((i) => i.cartId === cartId);
+    if (existing) {
+      setCart(cart.map((i) => i.cartId === cartId ? { ...i, quantity: i.quantity + 1 } : i));
+    } else {
+      setCart([...cart, {
+        ...product,
+        cartId,
+        quantity: 1,
+        price,
+        variantLabel,
+        variantInfo: variant || null,
+      }]);
+    }
+    setVariantModal(null);
+    setSelectedVariant({});
   };
 
-  const removeFromCart = (id) => {
-    setCart(cart.filter((i) => i._id !== id));
+  const handleAddVariantToCart = () => {
+    if (!variantModal) return;
+    const variant = variantModal.variants?.find(
+      (v) => Object.keys(selectedVariant).every((k) => v[k] === selectedVariant[k])
+    );
+    if (!variant) return notifyError("Please select all variant options!");
+    addProductToCart(variantModal, variant);
+  };
+
+  const updateQty = (cartId, qty) => {
+    if (qty < 1) return removeFromCart(cartId);
+    setCart(cart.map((i) => (i.cartId === cartId ? { ...i, quantity: qty } : i)));
+  };
+
+  const removeFromCart = (cartId) => {
+    setCart(cart.filter((i) => i.cartId !== cartId));
   };
 
   const clearCart = () => {
@@ -92,10 +168,30 @@ const POS = () => {
     if (cart.length === 0) return notifyError("Cart is empty!");
     setIsSubmitting(true);
     try {
+      const customerInfo = selectedCustomer
+        ? {
+            name: selectedCustomer.name,
+            email: selectedCustomer.email,
+            contact: selectedCustomer.phone || selectedCustomer.shippingAddress?.contact || "N/A",
+            address: selectedCustomer.shippingAddress?.address || "In-Store",
+            city: selectedCustomer.shippingAddress?.city || "",
+            country: selectedCustomer.shippingAddress?.country || "",
+            zipCode: selectedCustomer.shippingAddress?.zipCode || "",
+          }
+        : {
+            name: "Walk-in Customer",
+            email: "pos@n23gujaratibasket.com",
+            contact: "N/A",
+            address: "In-Store",
+            city: "",
+            country: "",
+            zipCode: "",
+          };
+
       const orderData = {
         cart: cart.map((i) => ({
           _id: i._id,
-          title: showingTranslateValue(i.title),
+          title: showingTranslateValue(i.title) + (i.variantLabel ? ` (${i.variantLabel})` : ""),
           image: i.image?.[0] || "",
           quantity: i.quantity,
           price: i.price,
@@ -107,21 +203,12 @@ const POS = () => {
         total: parseFloat(total.toFixed(2)),
         paymentMethod,
         status: "POS-Completed",
-        user_info: {
-          name: "Walk-in Customer",
-          email: "pos@n23gujaratibasket.com",
-          contact: "N/A",
-          address: "In-Store",
-          city: "",
-          country: "",
-          zipCode: "",
-        },
+        user_info: customerInfo,
         orderSource: "POS",
         createdBy: adminInfo?.name || "Admin",
       };
 
       const res = await OrderServices.addPosOrder(orderData);
-
       setCompletedOrder({ ...orderData, invoice: res?.invoice || res?._id || "POS" });
       notifySuccess("Order placed successfully!");
     } catch (err) {
@@ -134,6 +221,55 @@ const POS = () => {
     <>
       <PageTitle>Point of Sale</PageTitle>
 
+      {/* Customer Search */}
+      <div className="mb-4 relative">
+        <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800">
+          <FiUser className="text-gray-400" />
+          {selectedCustomer ? (
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  {selectedCustomer.name}
+                </span>
+                <span className="text-xs text-gray-400 ml-2">
+                  {selectedCustomer.email}
+                </span>
+              </div>
+              <button
+                onClick={() => { setSelectedCustomer(null); setCustomerSearch(""); setShowCustomerDropdown(false); }}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <FiX size={14} />
+              </button>
+            </div>
+          ) : (
+            <input
+              type="text"
+              placeholder="Search customer by name or email..."
+              value={customerSearch}
+              onChange={(e) => { setCustomerSearch(e.target.value); setShowCustomerDropdown(true); }}
+              onFocus={() => setShowCustomerDropdown(true)}
+              className="flex-1 text-sm outline-none bg-transparent dark:text-white placeholder-gray-400"
+            />
+          )}
+        </div>
+
+        {/* Customer Dropdown */}
+        {showCustomerDropdown && customerSearch && customers.length > 0 && !selectedCustomer && (
+          <div className="absolute z-50 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+            {customers.map((c) => (
+              <button
+                key={c._id}
+                onClick={() => { setSelectedCustomer(c); setShowCustomerDropdown(false); setCustomerSearch(""); }}
+                className="w-full text-left px-4 py-2 hover:bg-emerald-50 dark:hover:bg-gray-700 text-sm"
+              >
+                <p className="font-semibold text-gray-700 dark:text-gray-200">{c.name}</p>
+                <p className="text-xs text-gray-400">{c.email} {c.phone ? `• ${c.phone}` : ""}</p>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* LEFT — Product Grid */}
@@ -196,9 +332,14 @@ const POS = () => {
         {/* RIGHT — Cart */}
         <div className="w-full lg:w-96 flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-            <h2 className="font-bold text-gray-700 dark:text-gray-200 font-serif">
-              Cart ({cart.length})
-            </h2>
+            <div>
+              <h2 className="font-bold text-gray-700 dark:text-gray-200 font-serif">
+                Cart ({cart.length})
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {selectedCustomer ? selectedCustomer.name : "Walk-in Customer"}
+              </p>
+            </div>
             {cart.length > 0 && (
               <button
                 onClick={clearCart}
@@ -218,20 +359,23 @@ const POS = () => {
             ) : (
               cart.map((item) => (
                 <div
-                  key={item._id}
+                  key={item.cartId}
                   className="flex items-center justify-between gap-2"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">
                       {showingTranslateValue(item.title)}
                     </p>
+                    {item.variantLabel && (
+                      <p className="text-xs text-emerald-500">{item.variantLabel}</p>
+                    )}
                     <p className="text-xs text-gray-500">
                       {currency}{getNumberTwo(item.price)} each
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => updateQty(item._id, item.quantity - 1)}
+                      onClick={() => updateQty(item.cartId, item.quantity - 1)}
                       className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-red-100"
                     >
                       <FiMinus size={10} />
@@ -240,7 +384,7 @@ const POS = () => {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateQty(item._id, item.quantity + 1)}
+                      onClick={() => updateQty(item.cartId, item.quantity + 1)}
                       className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-emerald-100"
                     >
                       <FiPlus size={10} />
@@ -250,7 +394,7 @@ const POS = () => {
                     {currency}{getNumberTwo(item.price * item.quantity)}
                   </p>
                   <button
-                    onClick={() => removeFromCart(item._id)}
+                    onClick={() => removeFromCart(item.cartId)}
                     className="text-gray-300 hover:text-red-500"
                   >
                     <FiTrash2 size={13} />
@@ -338,6 +482,52 @@ const POS = () => {
         </div>
       </div>
 
+      {/* Variant Selection Modal */}
+      {variantModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-bold text-gray-700 dark:text-gray-200">
+                  {showingTranslateValue(variantModal.title)}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">Select a variant to add to cart</p>
+              </div>
+              <button onClick={() => setVariantModal(null)} className="text-gray-400 hover:text-red-500">
+                <FiX size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {variantModal.variants?.map((variant, idx) => {
+                const label = getVariantLabel(variant);
+                const price = variant.price || variantModal.prices?.price || 0;
+                const stock = variant.quantity ?? variant.stock ?? null;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => addProductToCart(variantModal, variant)}
+                    className="w-full flex items-center justify-between px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700 transition-all"
+                  >
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        {label}
+                      </p>
+                      {stock !== null && (
+                        <p className="text-xs text-gray-400">Stock: {stock}</p>
+                      )}
+                    </div>
+                    <span className="text-sm font-bold text-emerald-600">
+                      {currency}{getNumberTwo(price)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hidden Print Receipt */}
       {completedOrder && (
         <div className="hidden">
@@ -352,6 +542,12 @@ const POS = () => {
               </p>
             </div>
             <div className="border-t border-dashed border-gray-300 my-3" />
+            <div className="text-xs text-gray-600 mb-2">
+              <p><span className="font-semibold">Customer:</span> {completedOrder.user_info?.name}</p>
+              {completedOrder.user_info?.contact && completedOrder.user_info?.contact !== "N/A" && (
+                <p><span className="font-semibold">Phone:</span> {completedOrder.user_info?.contact}</p>
+              )}
+            </div>
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-gray-500">
