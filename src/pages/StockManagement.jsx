@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { FiSearch, FiEdit2, FiCheck, FiX, FiAlertTriangle, FiPackage } from "react-icons/fi";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -224,10 +224,9 @@ const StockManagement = () => {
                   product.isCombination && product.variants?.length > 0;
 
                 return (
-                  <>
+                  <React.Fragment key={product._id}>
                     {/* Main Product Row */}
                     <tr
-                      key={product._id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                       <td className="px-4 py-3">
@@ -394,7 +393,7 @@ const StockManagement = () => {
                           </tr>
                         );
                       })}
-                  </>
+                  </React.Fragment>
                 );
               })
             )}

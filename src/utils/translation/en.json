@@ -75,6 +75,7 @@
   "ProductNameTbl": "PRODUCT NAME",
   "CategoryTbl": "CATEGORY",
   "PriceTbl": "price",
+  "Stock": "Stock",
   "StockTbl": "STOCK",
   "StatusTbl": "STATUS",
   "VIEW": "VIEW",
