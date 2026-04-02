@@ -204,6 +204,7 @@ const POS = () => {
         paymentMethod,
         status: "POS-Completed",
         user_info: customerInfo,
+        customerId: selectedCustomer?._id || null,
         orderSource: "POS",
         createdBy: adminInfo?.name || "Admin",
       };
@@ -234,6 +235,11 @@ const POS = () => {
                 <span className="text-xs text-gray-400 ml-2">
                   {selectedCustomer.email}
                 </span>
+                {(selectedCustomer.phone || selectedCustomer.shippingAddress?.contact) && (
+                  <span className="text-xs text-gray-400 ml-2">
+                    • {selectedCustomer.phone || selectedCustomer.shippingAddress?.contact}
+                  </span>
+                )}
               </div>
               <button
                 onClick={() => { setSelectedCustomer(null); setCustomerSearch(""); setShowCustomerDropdown(false); }}
@@ -264,7 +270,12 @@ const POS = () => {
                 className="w-full text-left px-4 py-2 hover:bg-emerald-50 dark:hover:bg-gray-700 text-sm"
               >
                 <p className="font-semibold text-gray-700 dark:text-gray-200">{c.name}</p>
-                <p className="text-xs text-gray-400">{c.email} {c.phone ? `• ${c.phone}` : ""}</p>
+                <p className="text-xs text-gray-400">
+                  {c.email}
+                  {(c.phone || c.shippingAddress?.contact) && (
+                    <span className="ml-2">• {c.phone || c.shippingAddress?.contact}</span>
+                  )}
+                </p>
               </button>
             ))}
           </div>
