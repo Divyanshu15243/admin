@@ -11,7 +11,9 @@ const PieChart = ({ data }) => {
           label: "Dataset 1",
         },
       ],
-      labels: data?.bestSellingProduct?.map((selling) => selling._id),
+      labels: data?.bestSellingProduct?.map((selling) =>
+        typeof selling._id === "object" ? (selling._id?.en || Object.values(selling._id)[0] || "Unknown") : selling._id
+      ),
     },
     options: {
       responsive: true,
