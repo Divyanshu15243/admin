@@ -313,7 +313,7 @@ const Dashboard = () => {
             title="Total Customers"
             Icon={FiUsers}
             loading={loadingCustomers}
-            quantity={customersData?.length || 0}
+            quantity={Array.isArray(customersData) ? customersData.length : 0}
             className="text-purple-600 dark:text-purple-100 bg-purple-100 dark:bg-purple-500"
           />
           <CardItem
