@@ -32,6 +32,7 @@ import { SidebarContext } from "@/context/SidebarContext";
 import OrderServices from "@/services/OrderServices";
 import CustomerServices from "@/services/CustomerServices";
 import AnimatedContent from "@/components/common/AnimatedContent";
+import MonthlyReport from "@/components/MonthlyReport";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -413,6 +414,8 @@ const Dashboard = () => {
           </ChartCard>
         </div>
       </AnimatedContent>
+
+      <MonthlyReport />
 
       <PageTitle>{t("RecentOrder")}</PageTitle>
 

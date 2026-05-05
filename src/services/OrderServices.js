@@ -98,6 +98,10 @@ const OrderServices = {
   addPosOrder: async (body) => {
     return requests.post("/orders/pos/add", body);
   },
+
+  getMonthlyReport: async ({ month, year }) => {
+    return requests.get(`/orders/monthly-report?month=${month}&year=${year}`);
+  },
 };
 
 export default OrderServices;

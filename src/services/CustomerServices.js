@@ -32,6 +32,10 @@ const CustomerServices = {
   sendPaymentNotification: async (id, amount) => {
     return requests.post(`/customer/payment-notification/${id}`, { amount });
   },
+
+  sendNeftNotification: async (id, amount, neftNumber) => {
+    return requests.post(`/customer/neft-notification/${id}`, { amount, neftNumber });
+  },
 };
 
 export default CustomerServices;
