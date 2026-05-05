@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import { SidebarContext } from "@/context/SidebarContext";
 
 const useAsync = (asyncFunction) => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([] || {});
   const [error, setError] = useState("");
   // const [errCode, setErrCode] = useState('');
   const [loading, setLoading] = useState(true);
