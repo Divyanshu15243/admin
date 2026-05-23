@@ -13,10 +13,10 @@ const Invoice = ({ data, currency, getNumberTwo }) => {
             <TableCell className="px-6 py-1 whitespace-nowrap font-normal text-gray-500">
               <span
                 className={`text-gray-700 font-semibold  dark:text-gray-300 text-xs ${
-                  item.title.length > 15 ? "wrap-long-title" : "" // Apply class conditionally
+                  (typeof item.title === "object" ? item.title?.en || Object.values(item.title)[0] : item.title)?.length > 15 ? "wrap-long-title" : ""
                 }`}
               >
-                {item.title}
+                {typeof item.title === "object" ? (item.title?.en || item.title?.de || Object.values(item.title)[0] || "") : item.title}
               </span>
             </TableCell>
             <TableCell className="px-6 py-1 whitespace-nowrap font-bold text-center">

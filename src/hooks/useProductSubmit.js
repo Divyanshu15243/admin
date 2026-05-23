@@ -444,11 +444,11 @@ const useProductSubmit = (id) => {
       } else {
         const newCom = {
           ...com,
-
           originalPrice: getNumberTwo(originalPrice),
           price: getNumber(price),
           quantity: Number(quantity),
           discount: Number(originalPrice - price),
+          profit: 0,
           productId: productId && productId + "-" + (variants.length + i),
           barcode: barcode,
           sku: sku,

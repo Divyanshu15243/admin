@@ -532,7 +532,7 @@ const InvoiceForDownload = ({
               <View key={i} style={styles.tableRow}>
                 <View style={styles.tableCol}>
                   <Text style={styles.tableCell}>
-                    {item.title?.substring(0, 20)}
+                    {typeof item.title === "object" ? (item.title?.en || item.title?.de || Object.values(item.title)[0] || "")?.substring(0, 20) : (item.title || "")?.substring(0, 20)}
                   </Text>
                 </View>
                 <View style={styles.tableCol}>

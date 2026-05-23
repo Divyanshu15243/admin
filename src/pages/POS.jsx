@@ -196,6 +196,8 @@ const POS = () => {
           quantity: i.quantity,
           price: i.price,
           itemTotal: i.price * i.quantity,
+          prices: i.prices || null,
+          variant: i.variantInfo || null,
         })),
         subTotal: parseFloat(subTotal.toFixed(2)),
         shippingCost: 0,
