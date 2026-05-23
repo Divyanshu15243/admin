@@ -50,10 +50,11 @@ const MonthlyReportPDF = ({ data, month, year }) => {
           {[
             ["Total Orders", summary.totalOrders],
             ["Total Sales", `₹${parseFloat(summary.totalSales||0).toFixed(2)}`],
+            ["Total Profit", `₹${parseFloat(summary.totalProfit||0).toFixed(2)}`],
+            ["Owner Profit (60%)", `₹${parseFloat(summary.ownerProfit||0).toFixed(2)}`],
+            ["Referral Commission (40%)", `₹${parseFloat(summary.referralCommission||0).toFixed(2)}`],
             ["Total Discount", `₹${parseFloat(summary.totalDiscount||0).toFixed(2)}`],
             ["Shipping Collected", `₹${parseFloat(summary.totalShipping||0).toFixed(2)}`],
-            ["Owner Profit", `₹${parseFloat(summary.ownerProfit||0).toFixed(2)}`],
-            ["Referral Commission", `₹${parseFloat(summary.referralCommission||0).toFixed(2)}`],
             ["Cash Orders", summary.cashOrders],
             ["Online Orders", summary.onlineOrders],
             ["POS Orders", summary.posOrders],
@@ -222,8 +223,8 @@ const MonthlyReport = () => {
             {[
               { label: "Total Orders", value: s.totalOrders, color: "text-gray-700" },
               { label: "Total Sales", value: `₹${parseFloat(s.totalSales||0).toFixed(2)}`, color: "text-emerald-600" },
-              { label: "Owner Profit", value: `₹${parseFloat(s.ownerProfit||0).toFixed(2)}`, color: "text-blue-600" },
-              { label: "Referral Paid", value: `₹${parseFloat(s.referralCommission||0).toFixed(2)}`, color: "text-purple-600" },
+              { label: "Net Profit (after referral)", value: `₹${parseFloat(s.totalProfit||0).toFixed(2)}`, color: "text-emerald-700" },
+              { label: "Referral Paid Out", value: `₹${parseFloat(s.referralCommission||0).toFixed(2)}`, color: "text-purple-600" },
               { label: "Discount Given", value: `₹${parseFloat(s.totalDiscount||0).toFixed(2)}`, color: "text-orange-500" },
               { label: "POS Orders", value: s.posOrders, color: "text-teal-600" },
             ].map(({ label, value, color }) => (
