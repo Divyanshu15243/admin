@@ -203,6 +203,11 @@ const InvoiceForPrint = ({ data, printRef, globalSetting }) => {
                       </>
                     )}
                     <span className="text-gray-600">
+                      GST No. :{" "}
+                      <span className="font-semibold text-gray-900">24ALHPJ2769H1Z0</span>
+                    </span>
+                    <br />
+                    <span className="text-gray-600">
                       {t("Date")} :{" "}
                       <span className="font-semibold text-gray-700">
                         {" "}
@@ -439,6 +444,11 @@ const InvoiceForPrint = ({ data, printRef, globalSetting }) => {
                       <br />
                     </>
                   )}
+                  <span className="text-gray-600">
+                    GST No. :{" "}
+                    <span className="font-semibold text-gray-900">24ALHPJ2769H1Z0</span>
+                  </span>
+                  <br />
                   <span className="text-gray-600">
                     {t("Date")} :{" "}
                     <span className="font-semibold text-gray-700">

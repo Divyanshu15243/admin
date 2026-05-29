@@ -92,7 +92,7 @@ const Dashboard = () => {
 
     // yesterday orders
     const yesterdayOrder = dashboardOrderAmount?.ordersData?.filter((order) =>
-      dayjs(order.updatedAt).set(-1, "day").isYesterday()
+      dayjs(order.updatedAt).isYesterday()
     );
 
     const yesterdayReport = yesterdayOrder?.reduce(
@@ -161,7 +161,7 @@ const Dashboard = () => {
     });
     // yesterday order payment method
     dashboardOrderAmount?.ordersData?.filter((item, value) => {
-      if (dayjs(item.updatedAt).set(-1, "day").isYesterday()) {
+      if (dayjs(item.updatedAt).isYesterday()) {
         if (item.paymentMethod === "Cash") {
           let cashMethod = {
             paymentMethod: "Cash",

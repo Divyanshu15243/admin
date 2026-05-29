@@ -331,6 +331,7 @@ const InvoiceForDownload = ({
                   </Text>
                 </Text>
               )}
+              <Text style={styles.info}>GST No. : 24ALHPJ2769H1Z0</Text>
             </View>
 
             <View style={{ alignItems: "flex-end" }}>
