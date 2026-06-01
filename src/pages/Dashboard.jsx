@@ -8,9 +8,6 @@ import {
   WindmillContext,
 } from "@windmill/react-ui";
 import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
-import isToday from "dayjs/plugin/isToday";
-import isYesterday from "dayjs/plugin/isYesterday";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FiCheck, FiRefreshCw, FiShoppingCart, FiTruck, FiUsers } from "react-icons/fi";
@@ -37,10 +34,6 @@ import MonthlyReport from "@/components/MonthlyReport";
 const Dashboard = () => {
   const { t } = useTranslation();
   const { mode } = useContext(WindmillContext);
-
-  dayjs.extend(isBetween);
-  dayjs.extend(isToday);
-  dayjs.extend(isYesterday);
 
   const { currentPage, handleChangePage } = useContext(SidebarContext);
 
@@ -82,161 +75,49 @@ const Dashboard = () => {
   const { dataTable, serviceData } = useFilter(dashboardRecentOrder?.orders);
 
   useEffect(() => {
-    // today orders show
-    const todayOrder = dashboardOrderAmount?.ordersData?.filter((order) =>
-      dayjs(order.updatedAt).isToday()
-    );
-    //  console.log('todayOrder',dashboardOrderAmount.ordersData)
-    const todayReport = todayOrder?.reduce((pre, acc) => pre + acc.total, 0);
-    setTodayOrderAmount(todayReport);
+    if (!dashboardOrderAmount) return;
 
-    // yesterday orders
-    const yesterdayOrder = dashboardOrderAmount?.ordersData?.filter((order) =>
-      dayjs(order.updatedAt).isYesterday()
-    );
+    const { todayOrders = [], yesterdayOrders = [], chartOrders = [] } = dashboardOrderAmount;
 
-    const yesterdayReport = yesterdayOrder?.reduce(
-      (pre, acc) => pre + acc.total,
-      0
-    );
-    setYesterdayOrderAmount(yesterdayReport);
+    // today total
+    setTodayOrderAmount(todayOrders.reduce((sum, o) => sum + o.total, 0));
 
-    // sales orders chart data
-    const salesOrderChartData = dashboardOrderAmount?.ordersData?.filter(
-      (order) =>
-        dayjs(order.updatedAt).isBetween(
-          new Date().setDate(new Date().getDate() - 30),
-          new Date()
-        )
-    );
+    // yesterday total
+    setYesterdayOrderAmount(yesterdayOrders.reduce((sum, o) => sum + o.total, 0));
 
-    salesOrderChartData?.reduce((res, value) => {
-      let onlyDate = value.updatedAt.split("T")[0];
-
-      if (!res[onlyDate]) {
-        res[onlyDate] = { date: onlyDate, total: 0, order: 0 };
-        salesReport.push(res[onlyDate]);
+    // sales chart — last 30 days, no overlap
+    const chartMap = {};
+    const chartData = [];
+    chartOrders.forEach((order) => {
+      const date = order.updatedAt.split("T")[0];
+      if (!chartMap[date]) {
+        chartMap[date] = { date, total: 0, order: 0 };
+        chartData.push(chartMap[date]);
       }
-      res[onlyDate].total += value.total;
-      res[onlyDate].order += 1;
-      return res;
-    }, {});
-
-    setSalesReport(salesReport);
-
-    const todayPaymentMethodData = [];
-    const yesterDayPaymentMethodData = [];
-
-    // today order payment method
-    dashboardOrderAmount?.ordersData?.filter((item, value) => {
-      if (dayjs(item.updatedAt).isToday()) {
-        if (item.paymentMethod === "Cash") {
-          let cashMethod = {
-            paymentMethod: "Cash",
-            total: item.total,
-          };
-          todayPaymentMethodData.push(cashMethod);
-        }
-
-        if (item.paymentMethod === "Credit") {
-          const cashMethod = {
-            paymentMethod: "Credit",
-            total: item.total,
-          };
-
-          todayPaymentMethodData.push(cashMethod);
-        }
-
-        if (item.paymentMethod === "Card") {
-          const cashMethod = {
-            paymentMethod: "Card",
-            total: item.total,
-          };
-
-          todayPaymentMethodData.push(cashMethod);
-        }
-      }
-
-      return item;
+      chartMap[date].total += order.total;
+      chartMap[date].order += 1;
     });
-    // yesterday order payment method
-    dashboardOrderAmount?.ordersData?.filter((item, value) => {
-      if (dayjs(item.updatedAt).isYesterday()) {
-        if (item.paymentMethod === "Cash") {
-          let cashMethod = {
-            paymentMethod: "Cash",
-            total: item.total,
-          };
-          yesterDayPaymentMethodData.push(cashMethod);
-        }
+    setSalesReport(chartData);
 
-        if (item.paymentMethod === "Credit") {
-          const cashMethod = {
-            paymentMethod: "Credit",
-            total: item?.total,
-          };
-
-          yesterDayPaymentMethodData.push(cashMethod);
-        }
-
-        if (item.paymentMethod === "Card") {
-          const cashMethod = {
-            paymentMethod: "Card",
-            total: item?.total,
-          };
-
-          yesterDayPaymentMethodData.push(cashMethod);
-        }
-      }
-
-      return item;
+    // today payment method breakdown
+    const todayMethodMap = {};
+    todayOrders.forEach(({ paymentMethod, total }) => {
+      if (!todayMethodMap[paymentMethod]) todayMethodMap[paymentMethod] = 0;
+      todayMethodMap[paymentMethod] += total;
     });
+    setTodayCashPayment(todayMethodMap["Cash"] || 0);
+    setTodayCardPayment(todayMethodMap["Card"] || 0);
+    setTodayCreditPayment(todayMethodMap["Credit"] || 0);
 
-    const todayCsCdCit = Object.values(
-      todayPaymentMethodData.reduce((r, { paymentMethod, total }) => {
-        if (!r[paymentMethod]) {
-          r[paymentMethod] = { paymentMethod, total: 0 };
-        }
-        r[paymentMethod].total += total;
-
-        return r;
-      }, {})
-    );
-    const today_cash_payment = todayCsCdCit.find(
-      (el) => el.paymentMethod === "Cash"
-    );
-    setTodayCashPayment(today_cash_payment?.total);
-    const today_card_payment = todayCsCdCit.find(
-      (el) => el.paymentMethod === "Card"
-    );
-    setTodayCardPayment(today_card_payment?.total);
-    const today_credit_payment = todayCsCdCit.find(
-      (el) => el.paymentMethod === "Credit"
-    );
-    setTodayCreditPayment(today_credit_payment?.total);
-
-    const yesterDayCsCdCit = Object.values(
-      yesterDayPaymentMethodData.reduce((r, { paymentMethod, total }) => {
-        if (!r[paymentMethod]) {
-          r[paymentMethod] = { paymentMethod, total: 0 };
-        }
-        r[paymentMethod].total += total;
-
-        return r;
-      }, {})
-    );
-    const yesterday_cash_payment = yesterDayCsCdCit.find(
-      (el) => el.paymentMethod === "Cash"
-    );
-    setYesterdayCashPayment(yesterday_cash_payment?.total);
-    const yesterday_card_payment = yesterDayCsCdCit.find(
-      (el) => el.paymentMethod === "Card"
-    );
-    setYesterdayCardPayment(yesterday_card_payment?.total);
-    const yesterday_credit_payment = yesterDayCsCdCit.find(
-      (el) => el.paymentMethod === "Credit"
-    );
-    setYesterdayCreditPayment(yesterday_credit_payment?.total);
+    // yesterday payment method breakdown
+    const yestMethodMap = {};
+    yesterdayOrders.forEach(({ paymentMethod, total }) => {
+      if (!yestMethodMap[paymentMethod]) yestMethodMap[paymentMethod] = 0;
+      yestMethodMap[paymentMethod] += total;
+    });
+    setYesterdayCashPayment(yestMethodMap["Cash"] || 0);
+    setYesterdayCardPayment(yestMethodMap["Card"] || 0);
+    setYesterdayCreditPayment(yestMethodMap["Credit"] || 0);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardOrderAmount]);

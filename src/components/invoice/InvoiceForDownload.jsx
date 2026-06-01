@@ -323,15 +323,9 @@ const InvoiceForDownload = ({
               </Text>
               {globalSetting?.vat_number && (
                 <Text style={styles.info}>
-                  <Text className="font-semibold text-xs capitalize mt-2">
-                    VAT Number :{" "}
-                    <Text className="text-emerald-500">
-                      {globalSetting?.vat_number}
-                    </Text>
-                  </Text>
+                  GST No. : {globalSetting.vat_number}
                 </Text>
               )}
-              <Text style={styles.info}>GST No. : 24ALHPJ2769H1Z0</Text>
             </View>
 
             <View style={{ alignItems: "flex-end" }}>
@@ -533,7 +527,12 @@ const InvoiceForDownload = ({
               <View key={i} style={styles.tableRow}>
                 <View style={styles.tableCol}>
                   <Text style={styles.tableCell}>
-                    {typeof item.title === "object" ? (item.title?.en || item.title?.de || Object.values(item.title)[0] || "")?.substring(0, 20) : (item.title || "")?.substring(0, 20)}
+                    {(typeof item.title === "object"
+                      ? (item.title?.en || item.title?.de || Object.values(item.title)[0] || "")
+                      : (item.title || ""))
+                      .replace(/\s*\([a-f0-9]{24}\s*\/\s*[\d.]+\)/gi, "")
+                      .trim()
+                      .substring(0, 30)}
                   </Text>
                 </View>
                 <View style={styles.tableCol}>

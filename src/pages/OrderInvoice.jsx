@@ -109,6 +109,9 @@ const OrderInvoice = () => {
                     <Status status={data.status} />
                   </span>
                 </p>
+                <p className="text-xs mt-1 font-medium text-gray-500">
+                  GST No: {globalSetting?.vat_number || "24ALHPJ2769H1Z0"}
+                </p>
               </h1>
               <div className="lg:text-right text-left">
                 <h2 className="lg:flex lg:justify-end text-lg font-serif font-semibold mt-4 lg:mt-0 lg:ml-0 md:mt-0">
@@ -119,7 +122,12 @@ const OrderInvoice = () => {
                   {globalSetting?.address} <br />
                   {globalSetting?.contact} <br />{" "}
                   <span> {globalSetting?.email} </span> <br />
-                  {globalSetting?.website}
+                  {globalSetting?.website} <br />
+                  {globalSetting?.vat_number && (
+                    <span className="font-semibold text-gray-600 dark:text-gray-300">
+                      GST No: {globalSetting.vat_number}
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -241,6 +249,7 @@ const OrderInvoice = () => {
                 currency={currency}
                 getNumberTwo={getNumberTwo}
                 showDateFormat={showDateFormat}
+                globalSetting={globalSetting}
               />
             }
             fileName="Invoice"
