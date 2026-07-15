@@ -30,6 +30,16 @@ const useCustomerSubmit = (id) => {
 
       if (id) {
         const res = await CustomerServices.updateCustomer(id, customerData);
+
+        // if wallet balance changed, update via dedicated endpoint (creates Transaction record)
+        if (data.walletBalance !== undefined && data.walletBalance !== "") {
+          const currentRes = await CustomerServices.getCustomerById(id);
+          const newAmount = parseFloat(data.walletBalance);
+          if (!isNaN(newAmount) && newAmount !== (currentRes.walletBalance || 0)) {
+            await CustomerServices.updateWalletBalance(id, newAmount, "Admin manual wallet update");
+          }
+        }
+
         setIsUpdate(true);
         notifySuccess(res.message);
         closeDrawer();
@@ -51,6 +61,7 @@ const useCustomerSubmit = (id) => {
             setValue("phone", res.phone);
             setValue("email", res.email);
             setValue("address", res.address);
+            setValue("walletBalance", res.walletBalance || 0);
           }
         } catch (err) {
           notifyError(err?.response?.data?.message || err?.message);
