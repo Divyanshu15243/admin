@@ -36,10 +36,6 @@ const CustomerServices = {
   sendNeftNotification: async (id, amount, neftNumber) => {
     return requests.post(`/customer/neft-notification/${id}`, { amount, neftNumber });
   },
-
-  updateWalletBalance: async (id, amount, note) => {
-    return requests.patch(`/customer/${id}/wallet`, { amount, note });
-  },
 };
 
 export default CustomerServices;

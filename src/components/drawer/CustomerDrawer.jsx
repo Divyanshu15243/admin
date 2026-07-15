@@ -91,23 +91,6 @@ const CustomerDrawer = ({ id }) => {
                 <Error errorName={errors.address} />
               </div>
             </div>
-
-            {id && (
-              <div className="grid grid-cols-6 gap-3 md:gap-5 xl:gap-6 lg:gap-6 mb-6">
-                <LabelArea label={"Wallet Balance (₹)"} />
-                <div className="col-span-8 sm:col-span-4">
-                  <InputArea
-                    register={register}
-                    label="Wallet Balance"
-                    name="walletBalance"
-                    type="number"
-                    placeholder={"0.00"}
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Changing this will create a transaction record visible to the customer.</p>
-                  <Error errorName={errors.walletBalance} />
-                </div>
-              </div>
-            )}
           </div>
 
           <DrawerButton id={id} title="Customer" isSubmitting={isSubmitting} />
