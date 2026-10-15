@@ -6,11 +6,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import PageTitle from "@/components/Typography/PageTitle";
 import ProductServices from "@/services/ProductServices";
 import useUtilsFunction from "@/hooks/useUtilsFunction";
+import useVariantLabel from "@/hooks/useVariantLabel";
 import { notifyError, notifySuccess } from "@/utils/toast";
 
 const StockManagement = () => {
   const { showingTranslateValue, currency, getNumberTwo } = useUtilsFunction();
   const queryClient = useQueryClient();
+  const { getVariantLabel } = useVariantLabel();
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -34,9 +36,23 @@ const StockManagement = () => {
   const products = data?.products || [];
   const totalDoc = data?.totalDoc || 0;
 
+  const hasVariants = (p) => p.isCombination && p.variants?.length > 0;
+
+  // variant products: total stock is the sum of all variant stock
+  const getTotalStock = (p) =>
+    hasVariants(p)
+      ? p.variants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0)
+      : p.stock ?? 0;
+
+  // a variant product is "low" / "out" if any of its variants is
+  const getLowestStock = (p) =>
+    hasVariants(p)
+      ? Math.min(...p.variants.map((v) => Number(v.quantity) || 0))
+      : p.stock ?? 0;
+
   // filter products by stock status
   const filteredProducts = products.filter((p) => {
-    const stock = p.stock ?? 0;
+    const stock = getLowestStock(p);
     if (filter === "out") return stock === 0;
     if (filter === "low") return stock > 0 && stock <= 10;
     return true;
@@ -76,11 +92,17 @@ const StockManagement = () => {
       let updatedData = {};
 
       if (variantIndex !== null) {
-        // update variant stock
+        // update variant stock and keep the product total in sync
         const updatedVariants = product.variants.map((v, i) =>
           i === variantIndex ? { ...v, quantity: newStock } : v
         );
-        updatedData = { variants: updatedVariants };
+        updatedData = {
+          variants: updatedVariants,
+          stock: updatedVariants.reduce(
+            (sum, v) => sum + (Number(v.quantity) || 0),
+            0
+          ),
+        };
       } else {
         updatedData = { stock: newStock };
       }
@@ -101,11 +123,10 @@ const StockManagement = () => {
   };
 
   // stats
-  const outOfStock = products.filter((p) => (p.stock ?? 0) === 0).length;
+  const outOfStock = products.filter((p) => getLowestStock(p) === 0).length;
   const lowStock = products.filter(
-    (p) => (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 10
+    (p) => getLowestStock(p) > 0 && getLowestStock(p) <= 10
   ).length;
-  const inStock = products.filter((p) => (p.stock ?? 0) > 10).length;
 
   return (
     <>
@@ -220,8 +241,7 @@ const StockManagement = () => {
               filteredProducts.map((product) => {
                 const title = showingTranslateValue(product.title);
                 const img = product.image?.[0];
-                const hasVariants =
-                  product.isCombination && product.variants?.length > 0;
+                const isVariantProduct = hasVariants(product);
 
                 return (
                   <React.Fragment key={product._id}>
@@ -246,7 +266,7 @@ const StockManagement = () => {
                             <p className="font-semibold text-gray-700 dark:text-gray-200 text-xs">
                               {title}
                             </p>
-                            {hasVariants && (
+                            {isVariantProduct && (
                               <p className="text-xs text-emerald-500">
                                 {product.variants.length} variants
                               </p>
@@ -261,7 +281,7 @@ const StockManagement = () => {
                         {currency}{getNumberTwo(product.prices?.price || 0)}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {!hasVariants && (
+                        {!isVariantProduct && (
                           editingId === product._id ? (
                             <input
                               type="number"
@@ -283,15 +303,20 @@ const StockManagement = () => {
                             </span>
                           )
                         )}
-                        {hasVariants && (
-                          <span className="text-xs text-gray-400">See below</span>
+                        {isVariantProduct && (
+                          <span className="font-bold text-sm text-gray-700 dark:text-gray-200">
+                            {getTotalStock(product)}
+                            <span className="block text-xs font-normal text-gray-400">
+                              total
+                            </span>
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {!hasVariants && getStockBadge(product.stock ?? 0)}
+                        {getStockBadge(getLowestStock(product))}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {!hasVariants && (
+                        {!isVariantProduct && (
                           editingId === product._id ? (
                             <div className="flex items-center justify-center gap-2">
                               <button
@@ -320,7 +345,7 @@ const StockManagement = () => {
                     </tr>
 
                     {/* Variant Rows */}
-                    {hasVariants &&
+                    {isVariantProduct &&
                       product.variants.map((variant, vIdx) => {
                         const variantId = `${product._id}-v${vIdx}`;
                         const variantStock = variant.quantity ?? 0;
@@ -330,8 +355,11 @@ const StockManagement = () => {
                             className="bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                           >
                             <td className="px-4 py-2 pl-16">
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                ↳ {variant.productId || `Variant ${vIdx + 1}`}
+                              <p className="text-xs text-gray-600 dark:text-gray-300">
+                                ↳ {title}{" "}
+                                <span className="font-semibold text-emerald-600">
+                                  {getVariantLabel(variant)}
+                                </span>
                               </p>
                             </td>
                             <td className="px-4 py-2 text-xs text-gray-400">

@@ -2,7 +2,7 @@ import { useContext, useState, useRef } from "react";
 import { FiSearch, FiTrash2, FiPrinter, FiPlus, FiMinus, FiEye, FiUser, FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { WindmillContext } from "@windmill/react-ui";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactToPrint from "react-to-print";
 
 // internal imports
@@ -11,8 +11,8 @@ import Loading from "@/components/preloader/Loading";
 import ProductServices from "@/services/ProductServices";
 import OrderServices from "@/services/OrderServices";
 import CustomerServices from "@/services/CustomerServices";
-import AttributeServices from "@/services/AttributeServices";
 import useUtilsFunction from "@/hooks/useUtilsFunction";
+import useVariantLabel from "@/hooks/useVariantLabel";
 import { notifyError, notifySuccess } from "@/utils/toast";
 import { AdminContext } from "@/context/AdminContext";
 
@@ -21,6 +21,7 @@ const POS = () => {
   const { state } = useContext(AdminContext);
   const { adminInfo } = state;
   const printRef = useRef();
+  const queryClient = useQueryClient();
 
   const { currency, getNumberTwo, showingTranslateValue } = useUtilsFunction();
 
@@ -49,36 +50,8 @@ const POS = () => {
 
   const customers = Array.isArray(customersData) ? customersData : customersData?.customers || [];
 
-  // fetch all attributes to map IDs to names
-  const { data: attributesData } = useQuery({
-    queryKey: ["all-attributes"],
-    queryFn: () => AttributeServices.getShowingAttributes({}),
-  });
-
-  // build a flat map: { attributeId: { name, children: { childId: childName } } }
-  const attrMap = {};
-  if (attributesData) {
-    attributesData.forEach((attr) => {
-      attrMap[attr._id] = {
-        name: showingTranslateValue(attr.name),
-        children: {},
-      };
-      attr.values?.forEach((child) => {
-        attrMap[attr._id].children[child._id] = showingTranslateValue(child.name);
-      });
-    });
-  }
-
-  // given a variant object, return readable label like "150g / Red"
-  const getVariantLabel = (variant) => {
-    const parts = [];
-    Object.keys(variant).forEach((key) => {
-      if (['_id','price','originalPrice','quantity','discount','productId','barcode','sku','image'].includes(key)) return;
-      const attrName = attrMap[key]?.children[variant[key]] || variant[key];
-      if (attrName) parts.push(attrName);
-    });
-    return parts.join(' / ') || 'Default';
-  };
+  // readable variant names like "10kg / Red"
+  const { getVariantLabel } = useVariantLabel();
 
   const { data: posOrdersData, isLoading: posOrdersLoading, refetch: refetchPosOrders } = useQuery({
     queryKey: ["pos-orders", posPage],
@@ -191,6 +164,7 @@ const POS = () => {
       const orderData = {
         cart: cart.map((i) => ({
           _id: i._id,
+          productId: i._id,
           title: showingTranslateValue(i.title) + (i.variantLabel ? ` (${i.variantLabel})` : ""),
           image: i.image?.[0] || "",
           quantity: i.quantity,
@@ -214,6 +188,9 @@ const POS = () => {
       const res = await OrderServices.addPosOrder(orderData);
       setCompletedOrder({ ...orderData, invoice: res?.invoice || res?._id || "POS" });
       notifySuccess("Order placed successfully!");
+      // stock changed on the server, refresh product lists
+      queryClient.invalidateQueries({ queryKey: ["pos-products"] });
+      queryClient.invalidateQueries({ queryKey: ["stock-products"] });
     } catch (err) {
       notifyError(err?.message || "Order failed!");
     }

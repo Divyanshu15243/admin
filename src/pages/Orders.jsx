@@ -50,7 +50,14 @@ const Orders = () => {
     handleChangePage,
     handleSubmitForAll,
     resultsPerPage,
+    setCurrentPage,
   } = useContext(SidebarContext);
+
+  // any filter change starts again from the first page
+  const withPageReset = (setter) => (e) => {
+    setCurrentPage(1);
+    setter(e.target.value);
+  };
 
   const { t } = useTranslation();
 
@@ -127,6 +134,7 @@ const Orders = () => {
     setEndDate("");
     setStartDate("");
     setSearchText("");
+    setCurrentPage(1);
     searchRef.current.value = "";
   };
   // console.log("data in orders page", data);
@@ -145,29 +153,26 @@ const Orders = () => {
                     ref={searchRef}
                     type="search"
                     name="search"
-                    placeholder="Search by Customer Name"
+                    placeholder="Search by name, phone, email or invoice"
                   />
                 </div>
 
                 <div>
-                  <Select onChange={(e) => setStatus(e.target.value)}>
-                    <option value="Status" defaultValue hidden>
-                      {t("Status")}
-                    </option>
+                  <Select value={status} onChange={withPageReset(setStatus)}>
+                    <option value="">{t("Status")}</option>
                     <option value="Delivered">{t("PageOrderDelivered")}</option>
                     <option value="Pending">{t("PageOrderPending")}</option>
                     <option value="Processing">
                       {t("PageOrderProcessing")}
                     </option>
                     <option value="Cancel">{t("OrderCancel")}</option>
+                    <option value="POS-Completed">POS Completed</option>
                   </Select>
                 </div>
 
                 <div>
-                  <Select onChange={(e) => setTime(e.target.value)}>
-                    <option value="Order limits" defaultValue hidden>
-                      {t("Orderlimits")}
-                    </option>
+                  <Select value={time} onChange={withPageReset(setTime)}>
+                    <option value="">{t("Orderlimits")}</option>
                     <option value="5">{t("DaysOrders5")}</option>
                     <option value="7">{t("DaysOrders7")}</option>
                     <option value="15">{t("DaysOrders15")}</option>
@@ -175,13 +180,13 @@ const Orders = () => {
                   </Select>
                 </div>
                 <div>
-                  <Select onChange={(e) => setMethod(e.target.value)}>
-                    <option value="Method" defaultValue hidden>
-                      {t("Method")}
-                    </option>
+                  <Select value={method} onChange={withPageReset(setMethod)}>
+                    <option value="">{t("Method")}</option>
 
                     <option value="Cash">{t("Cash")}</option>
                     <option value="Card">{t("Card")}</option>
+                    <option value="RazorPay">RazorPay</option>
+                    <option value="UPI">UPI</option>
                     <option value="Credit">{t("Credit")}</option>
                   </Select>
                 </div>
@@ -227,7 +232,8 @@ const Orders = () => {
                   <Input
                     type="date"
                     name="startDate"
-                    onChange={(e) => setStartDate(e.target.value)}
+                    value={startDate}
+                    onChange={withPageReset(setStartDate)}
                   />
                 </div>
 
@@ -235,8 +241,10 @@ const Orders = () => {
                   <Label>End Date</Label>
                   <Input
                     type="date"
-                    name="startDate"
-                    onChange={(e) => setEndDate(e.target.value)}
+                    name="endDate"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={withPageReset(setEndDate)}
                   />
                 </div>
                 <div className="mt-2 md:mt-0 flex items-center xl:gap-x-4 gap-x-1 flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
@@ -316,6 +324,8 @@ const Orders = () => {
 
           <TableFooter>
             <Pagination
+              // remount so the highlighted page goes back to 1 when filters change
+              key={[searchText, status, time, method, startDate, endDate].join("|")}
               totalResults={data?.totalDoc}
               resultsPerPage={resultsPerPage}
               onChange={handleChangePage}

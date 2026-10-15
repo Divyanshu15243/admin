@@ -15,13 +15,19 @@ const OrderServices = {
     endDate,
     // download = "",
   }) => {
-    const searchName = customerName !== null ? customerName : "";
-    const searchStatus = status !== null ? status : "";
-    const searchDay = day !== null ? day : "";
-    // const searchSource = source !== null ? source : "";
-    const searchMethod = method !== null ? method : "";
-    const startD = startDate !== null ? startDate : "";
-    const endD = endDate !== null ? endDate : "";
+    const enc = (v) => encodeURIComponent(v ?? "");
+    // date inputs give YYYY-MM-DD; send the admin's local day boundaries
+    const dayBoundary = (d, endOfDay) =>
+      d
+        ? new Date(`${d}T${endOfDay ? "23:59:59.999" : "00:00:00"}`).toISOString()
+        : "";
+
+    const searchName = enc(customerName);
+    const searchStatus = enc(status);
+    const searchDay = enc(day);
+    const searchMethod = enc(method);
+    const startD = enc(dayBoundary(startDate, false));
+    const endD = enc(dayBoundary(endDate, true));
 
     return requests.get(
       `/orders?customerName=${searchName}&status=${searchStatus}&day=${searchDay}&page=${page}&limit=${limit}&startDate=${startD}&endDate=${endD}&method=${searchMethod}`,

@@ -91,8 +91,11 @@ export const SidebarProvider = ({ children }) => {
 
   const handleSubmitForAll = (e) => {
     e.preventDefault();
-    if (!searchRef?.current?.value) return setSearchText(null);
-    setSearchText(searchRef?.current?.value);
+    // a new search always starts from the first page
+    setCurrentPage(1);
+    const value = searchRef?.current?.value?.trim();
+    if (!value) return setSearchText(null);
+    setSearchText(value);
     setCategory(null);
   };
 
